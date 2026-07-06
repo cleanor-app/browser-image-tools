@@ -1,0 +1,59 @@
+{
+  "name": "@cleanor/browser-image-tools",
+  "version": "0.1.0",
+  "description": "Privacy-first image processing in the browser: convert, compress and encode PNG, JPEG, WebP, AVIF, GIF and ICO entirely on the client. Files never leave the device.",
+  "type": "module",
+  "license": "MIT",
+  "homepage": "https://cleanor.app/tools",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cleanor-app/browser-image-tools.git"
+  },
+  "keywords": [
+    "image",
+    "browser",
+    "webp",
+    "avif",
+    "png",
+    "jpeg",
+    "gif",
+    "ico",
+    "image-compression",
+    "image-conversion",
+    "client-side",
+    "privacy",
+    "canvas",
+    "wasm"
+  ],
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@cross/image": "npm:@jsr/cross__image@^0.4.3",
+    "@ffmpeg/ffmpeg": "^0.12.15",
+    "@ffmpeg/util": "^0.12.2",
+    "@jsquash/jpeg": "^1.6.0",
+    "@pdf-lib/upng": "^1.0.1",
+    "exifr": "^7.1.3",
+    "jszip": "3.10.1"
+  },
+  "devDependencies": {
+    "tsup": "^8.3.5",
+    "typescript": "^5.6.3"
+  }
+}
