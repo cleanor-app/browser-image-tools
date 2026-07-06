@@ -109,6 +109,9 @@ npm run build
 ## Citation
 
 If you use this library in research or a product, please cite it — see [`CITATION.cff`](CITATION.cff) (GitHub's "Cite this repository" button). Authored by Cleanor Labs, [ORCID 0009-0005-4623-961X](https://orcid.org/0009-0005-4623-961X). A software paper ([`paper.md`](paper.md)) is prepared for the [Journal of Open Source Software](https://joss.theoj.org/), and a versioned, DOI-assigned archive is deposited on Zenodo.
+<!-- DOI: after the first Zenodo release, paste the badge here, e.g.
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.XXXXXXX.svg)](https://doi.org/10.5281/zenodo.XXXXXXX) -->
+
 
 ## License
 
