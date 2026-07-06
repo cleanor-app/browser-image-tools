@@ -4,13 +4,39 @@
 
 [![npm](https://img.shields.io/npm/v/@cleanor/browser-image-tools.svg)](https://www.npmjs.com/package/@cleanor/browser-image-tools)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Types](https://img.shields.io/badge/types-included-blue.svg)](#)
+[![Types](https://img.shields.io/badge/types-included-blue.svg)](#whats-included)
+[![Try it live](https://img.shields.io/badge/try%20it%20live-cleanor.app%2Ftools-0a7cff.svg)](https://cleanor.app/tools)
 
-Extracted from the [Cleanor](https://cleanor.app/tools) browser tools, which run these same modules in production. Framework-agnostic: works with React, Vue, Svelte, or plain `<script type="module">`.
+> 🔒 These are the exact modules powering the free tools at **[cleanor.app/tools](https://cleanor.app/tools)** — run them yourself, no backend required.
+
+## Contents
+
+- [Why](#why)
+- [Try it live](#try-it-live)
+- [Install](#install)
+- [Usage](#usage)
+- [What's included](#whats-included)
+- [Notes](#notes)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## Why
 
 Most "image optimizer" libraries either run on a server (your users' photos leave their machine) or wrap a single codec. This is the whole client-side image pipeline Cleanor ships — decode, analyze, transform, and re-encode across formats — with **nothing sent anywhere.** Ideal for privacy-sensitive apps, offline PWAs, and anywhere you don't want to pay for or operate an image backend.
+
+Framework-agnostic: works with React, Vue, Svelte, or plain `<script type="module">`.
+
+## Try it live
+
+Each namespace below backs a live, no-signup tool you can try in your browser:
+
+| Do this | Live tool |
+| --- | --- |
+| AVIF → JPG / PNG / WebP | [avif-to-jpg](https://cleanor.app/tools/avif-to-jpg) · [avif-to-png](https://cleanor.app/tools/avif-to-png) · [avif-to-webp](https://cleanor.app/tools/avif-to-webp) |
+| PNG → WebP | [png-to-webp](https://cleanor.app/tools/png-to-webp) |
+| Recompress AVIF | [avif-compressor](https://cleanor.app/tools/avif-compressor) |
+| Build animated WebP | [animated-webp-maker](https://cleanor.app/tools/animated-webp-maker) |
+| Generate an app-icon pack | [app-icon-pack-generator](https://cleanor.app/tools/app-icon-pack-generator) |
 
 ## Install
 
@@ -70,6 +96,16 @@ Everything is fully typed — explore the API through your editor's autocomplete
 - Heavy codecs (`@ffmpeg/ffmpeg`, `@jsquash/jpeg`) are kept **external** so your bundler can code-split and lazy-load them. Only the format namespaces you import pull their deps in.
 - The GIF/WebP video paths load `ffmpeg.wasm` on first use.
 
+## Contributing
+
+Issues and PRs welcome — bug fixes, new format helpers, and framework examples (React/Vue/Svelte hooks) especially. Build and typecheck before opening a PR:
+
+```bash
+npm install
+npm run typecheck
+npm run build
+```
+
 ## License
 
-[MIT](LICENSE) © Cleanor Labs. See more open data and tools at [cleanor.app/research](https://cleanor.app/research).
+[MIT](LICENSE) © Cleanor Labs. More open data and tools at [cleanor.app/research](https://cleanor.app/research) and [cleanor.app/tools](https://cleanor.app/tools).
