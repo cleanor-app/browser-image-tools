@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "browser-image-tools: privacy-first, client-side image conversion and compression"
+authors:
+  - name: "Cleanor Labs"
+    orcid: "https://orcid.org/0009-0005-4623-961X"
+url: "https://cleanor.app/tools"
+repository-code: "https://github.com/cleanor-app/browser-image-tools"
+license: MIT
+version: "0.1.0"
+date-released: 2026-07-06
+keywords:
+  - image processing
+  - image compression
+  - WebP
+  - AVIF
+  - WebAssembly
+  - browser
+  - client-side
+  - privacy

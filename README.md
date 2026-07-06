@@ -106,6 +106,10 @@ npm run typecheck
 npm run build
 ```
 
+## Citation
+
+If you use this library in research or a product, please cite it — see [`CITATION.cff`](CITATION.cff) (GitHub's "Cite this repository" button). Authored by Cleanor Labs, [ORCID 0009-0005-4623-961X](https://orcid.org/0009-0005-4623-961X). A software paper ([`paper.md`](paper.md)) is prepared for the [Journal of Open Source Software](https://joss.theoj.org/), and a versioned, DOI-assigned archive is deposited on Zenodo.
+
 ## License
 
 [MIT](LICENSE) © Cleanor Labs. More open data and tools at [cleanor.app/research](https://cleanor.app/research) and [cleanor.app/tools](https://cleanor.app/tools).

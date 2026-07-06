@@ -1,0 +1,38 @@
+{
+  "title": "browser-image-tools: privacy-first, client-side image conversion and compression",
+  "description": "<p>A framework-agnostic TypeScript library that converts, compresses and encodes PNG, JPEG, WebP, AVIF, GIF and ICO images entirely in the browser using the Canvas API and WebAssembly codecs. Because all processing happens on the client, image data never leaves the user's device, making it suitable for privacy-sensitive and offline applications. The library is extracted from the production tools at https://cleanor.app/tools.</p>",
+  "upload_type": "software",
+  "access_right": "open",
+  "license": "mit",
+  "creators": [
+    {
+      "name": "Cleanor Labs",
+      "affiliation": "Cleanor Research Labs",
+      "orcid": "0009-0005-4623-961X"
+    }
+  ],
+  "keywords": [
+    "image processing",
+    "image compression",
+    "image conversion",
+    "WebP",
+    "AVIF",
+    "WebAssembly",
+    "browser",
+    "client-side",
+    "privacy",
+    "TypeScript"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/cleanor-app/browser-image-tools",
+      "relation": "isSupplementTo",
+      "scheme": "url"
+    },
+    {
+      "identifier": "https://cleanor.app/tools",
+      "relation": "isDocumentedBy",
+      "scheme": "url"
+    }
+  ]
+}
