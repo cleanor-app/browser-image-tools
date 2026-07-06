@@ -4,10 +4,17 @@
   "description": "Privacy-first image processing in the browser: convert, compress and encode PNG, JPEG, WebP, AVIF, GIF and ICO entirely on the client. Files never leave the device.",
   "type": "module",
   "license": "MIT",
+  "author": "Cleanor Research Labs (https://cleanor.app)",
   "homepage": "https://cleanor.app/tools",
   "repository": {
     "type": "git",
     "url": "https://github.com/cleanor-app/browser-image-tools.git"
+  },
+  "bugs": {
+    "url": "https://github.com/cleanor-app/browser-image-tools/issues"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "keywords": [
     "image",
@@ -37,14 +44,16 @@
     }
   },
   "files": [
-    "dist"
+    "dist/**/*.js",
+    "dist/**/*.cjs",
+    "dist/**/*.d.ts",
+    "dist/**/*.d.cts"
   ],
   "scripts": {
     "build": "tsup",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@cross/image": "npm:@jsr/cross__image@^0.4.3",
     "@ffmpeg/ffmpeg": "^0.12.15",
     "@ffmpeg/util": "^0.12.2",
     "@jsquash/jpeg": "^1.6.0",
@@ -53,6 +62,7 @@
     "jszip": "3.10.1"
   },
   "devDependencies": {
+    "@cross/image": "npm:@jsr/cross__image@^0.4.3",
     "tsup": "^8.3.5",
     "typescript": "^5.6.3"
   }

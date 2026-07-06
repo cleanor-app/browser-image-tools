@@ -9,5 +9,9 @@ export default defineConfig({
   treeshake: true,
   splitting: false,
   // Keep the heavy runtime deps external so consumers control bundling.
-  external: ['@ffmpeg/ffmpeg', '@ffmpeg/util', '@jsquash/jpeg', '@cross/image', '@pdf-lib/upng', 'jszip', 'exifr'],
+  // NOTE: @cross/image is deliberately NOT external — it is a JSR-only package
+  // (aliased via npm:@jsr/...), so leaving it external would make
+  // `npm install` fail for anyone without the JSR registry configured. It is
+  // pure JS with no sub-deps, so we inline it into the bundle instead.
+  external: ['@ffmpeg/ffmpeg', '@ffmpeg/util', '@jsquash/jpeg', '@pdf-lib/upng', 'jszip', 'exifr'],
 });
