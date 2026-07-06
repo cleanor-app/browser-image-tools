@@ -8,7 +8,7 @@
   "homepage": "https://cleanor.app/tools",
   "repository": {
     "type": "git",
-    "url": "https://github.com/cleanor-app/browser-image-tools.git"
+    "url": "git+https://github.com/cleanor-app/browser-image-tools.git"
   },
   "bugs": {
     "url": "https://github.com/cleanor-app/browser-image-tools/issues"
