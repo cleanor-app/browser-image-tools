@@ -9,6 +9,11 @@ repository-code: "https://github.com/cleanor-app/browser-image-tools"
 license: MIT
 version: "0.1.0"
 date-released: 2026-07-06
+doi: "10.5281/zenodo.21217435"
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.21217435"
+    description: "Archived version on Zenodo"
 keywords:
   - image processing
   - image compression

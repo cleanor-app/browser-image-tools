@@ -6,6 +6,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Types](https://img.shields.io/badge/types-included-blue.svg)](#whats-included)
 [![Try it live](https://img.shields.io/badge/try%20it%20live-cleanor.app%2Ftools-0a7cff.svg)](https://cleanor.app/tools)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21217435.svg)](https://doi.org/10.5281/zenodo.21217435)
 
 > 🔒 These are the exact modules powering the free tools at **[cleanor.app/tools](https://cleanor.app/tools)** — run them yourself, no backend required.
 
@@ -108,9 +109,7 @@ npm run build
 
 ## Citation
 
-If you use this library in research or a product, please cite it — see [`CITATION.cff`](CITATION.cff) (GitHub's "Cite this repository" button). Authored by Cleanor Labs, [ORCID 0009-0005-4623-961X](https://orcid.org/0009-0005-4623-961X). A software paper ([`paper.md`](paper.md)) is prepared for the [Journal of Open Source Software](https://joss.theoj.org/), and a versioned, DOI-assigned archive is deposited on Zenodo.
-<!-- DOI: after the first Zenodo release, paste the badge here, e.g.
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.XXXXXXX.svg)](https://doi.org/10.5281/zenodo.XXXXXXX) -->
+If you use this library in research or a product, please cite it — see [`CITATION.cff`](CITATION.cff) (GitHub's "Cite this repository" button). Authored by Cleanor Labs, [ORCID 0009-0005-4623-961X](https://orcid.org/0009-0005-4623-961X). A software paper ([`paper.md`](paper.md)) is prepared for the [Journal of Open Source Software](https://joss.theoj.org/). The archived, citable version has DOI [10.5281/zenodo.21217435](https://doi.org/10.5281/zenodo.21217435).
 
 
 ## License
