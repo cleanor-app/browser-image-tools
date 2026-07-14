@@ -1,6 +1,6 @@
 {
   "name": "@cleanor/browser-image-tools",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Privacy-first image processing in the browser: convert, compress and encode PNG, JPEG, WebP, AVIF, GIF and ICO entirely on the client. Files never leave the device.",
   "type": "module",
   "license": "MIT",
