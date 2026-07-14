@@ -298,7 +298,7 @@ Every namespace backs a free, no-signup tool:
 
 | Do this | Live tool |
 | --- | --- |
-| Compress any image | [image-compressor](https://cleanor.app/tools/image-compressor) |
+| Compress any image | [image-converter](https://cleanor.app/tools/image-converter) |
 | PNG to WebP | [png-to-webp](https://cleanor.app/tools/png-to-webp) |
 | AVIF to JPG, PNG or WebP | [avif-to-jpg](https://cleanor.app/tools/avif-to-jpg), [avif-to-png](https://cleanor.app/tools/avif-to-png), [avif-to-webp](https://cleanor.app/tools/avif-to-webp) |
 | Recompress AVIF | [avif-compressor](https://cleanor.app/tools/avif-compressor) |

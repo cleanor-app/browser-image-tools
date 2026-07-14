@@ -106,4 +106,4 @@ console.log(`${formatFileSize(file.size)} -> ${formatFileSize(compressed.size)} 
 - [AVIF encoding in the browser](avif-encoding-in-the-browser.md)
 - [Resize an image with canvas](resize-an-image-with-canvas.md)
 - Full export list in the [README](../README.md#api)
-- Try it without installing anything: [cleanor.app/tools/image-compressor](https://cleanor.app/tools/image-compressor)
+- Try it without installing anything: [cleanor.app/tools/image-converter](https://cleanor.app/tools/image-converter)
