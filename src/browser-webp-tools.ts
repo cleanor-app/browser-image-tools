@@ -1,7 +1,10 @@
-'use client';
+"use client";
 
-import { Image as CrossImage } from '@cross/image';
-import { encodePngSequenceToGif, getBrowserFfmpegRuntime } from './browser-gif-tools';
+import { Image as CrossImage } from "@cross/image";
+import {
+  encodePngSequenceToGif,
+  getBrowserFfmpegRuntime,
+} from "./browser-gif-tools";
 import {
   analyzeTransparency,
   canvasToBlob,
@@ -13,7 +16,7 @@ import {
   loadImageElementFromBlob,
   loadRasterImage,
   sanitizeHexColor,
-} from './browser-image-tools';
+} from "./browser-image-tools";
 import {
   capAnimationFrameRate,
   createZipBlob,
@@ -28,7 +31,7 @@ import {
   type GradientDirection,
   type PngChannelView,
   type PngPaletteEntry,
-} from './browser-png-tools';
+} from "./browser-png-tools";
 
 type ProgressHandler = (progress: number) => void;
 
@@ -60,7 +63,7 @@ export type DecodedWebpSource = {
   loadedImage: Awaited<ReturnType<typeof loadRasterImage>>;
 };
 
-export type WebpOptimizationPreset = 'balanced' | 'smaller' | 'aggressive';
+export type WebpOptimizationPreset = "balanced" | "smaller" | "aggressive";
 
 function readUint32LE(bytes: Uint8Array, offset: number) {
   return (
@@ -81,7 +84,8 @@ function readUint16LE(bytes: Uint8Array, offset: number) {
 }
 
 function normalizeFfmpegOutput(data: string | Uint8Array) {
-  const bytes = data instanceof Uint8Array ? data : new TextEncoder().encode(String(data));
+  const bytes =
+    data instanceof Uint8Array ? data : new TextEncoder().encode(String(data));
   const copy = new Uint8Array(bytes.byteLength);
   copy.set(bytes);
   return copy;
@@ -101,18 +105,20 @@ function buildConcatManifest(frameNames: string[], delays: number[]) {
     lines.push(`file '${lastFrame}'`);
   }
 
-  return `${lines.join('\n')}\n`;
+  return `${lines.join("\n")}\n`;
 }
 
 async function cleanupFiles(
-  ffmpeg: Awaited<ReturnType<typeof getBrowserFfmpegRuntime>>['ffmpeg'],
+  ffmpeg: Awaited<ReturnType<typeof getBrowserFfmpegRuntime>>["ffmpeg"],
   fileNames: string[],
 ) {
-  await Promise.allSettled(fileNames.map((fileName) => ffmpeg.deleteFile(fileName)));
+  await Promise.allSettled(
+    fileNames.map((fileName) => ffmpeg.deleteFile(fileName)),
+  );
 }
 
 async function readBlobFromFile(
-  ffmpeg: Awaited<ReturnType<typeof getBrowserFfmpegRuntime>>['ffmpeg'],
+  ffmpeg: Awaited<ReturnType<typeof getBrowserFfmpegRuntime>>["ffmpeg"],
   fileName: string,
   mimeType: string,
 ) {
@@ -133,35 +139,59 @@ async function createStillWebpBlobFromImageData(
     imageData.height,
     new Uint8Array(imageData.data),
   );
-  const encoded = await image.encode('webp', {
-    quality: clamp(Math.round(options.quality), 1, 100),
+
+  // `lossless` alone does nothing here, and the library will not tell you so. @cross/image reads
+  // it only in its pure-JS VP8L fallback, which is reached only when OffscreenCanvas is missing,
+  // which is never in a browser. The branch that actually runs forwards `quality` and nothing
+  // else. Measured in Chromium: every quality below 1.0 emits a lossy VP8 chunk, and only 1.0
+  // emits VP8L. So asking for lossless means asking for quality 100, on both branches.
+  const encoded = await image.encode("webp", {
+    quality: options.lossless
+      ? 100
+      : clamp(Math.round(options.quality), 1, 100),
     lossless: options.lossless,
   } as never);
-  return new Blob([Uint8Array.from(encoded)], { type: 'image/webp' });
+
+  // The same library checks this on its AVIF path and skips it here. `toBlob`/`convertToBlob` are
+  // allowed by the HTML spec to hand back a PNG when they cannot encode the type you asked for,
+  // and WebKit does exactly that: it returns PNG bytes in a Blob honestly typed image/png, which
+  // @cross/image passes straight through. Without this check those bytes get wrapped in a Blob
+  // labelled image/webp and saved as a .webp the user's tools will refuse to open.
+  const bytes = Uint8Array.from(encoded);
+  if (!isWebpRiff(bytes)) {
+    throw new Error(
+      "This browser could not encode WebP locally, and handed back another format instead. Try a Chromium or Firefox build.",
+    );
+  }
+
+  return new Blob([bytes], { type: "image/webp" });
 }
 
 function getOptimizationQuality(preset: WebpOptimizationPreset) {
-  if (preset === 'smaller') {
+  if (preset === "smaller") {
     return 68;
   }
 
-  if (preset === 'aggressive') {
+  if (preset === "aggressive") {
     return 52;
   }
 
   return 82;
 }
 
-function getCompressionLevel(preset: WebpOptimizationPreset, method?: number | null) {
-  if (typeof method === 'number') {
+function getCompressionLevel(
+  preset: WebpOptimizationPreset,
+  method?: number | null,
+) {
+  if (typeof method === "number") {
     return clamp(Math.round(method), 0, 6);
   }
 
-  if (preset === 'aggressive') {
+  if (preset === "aggressive") {
     return 6;
   }
 
-  if (preset === 'smaller') {
+  if (preset === "smaller") {
     return 5;
   }
 
@@ -170,12 +200,12 @@ function getCompressionLevel(preset: WebpOptimizationPreset, method?: number | n
 
 function createAnimatedDecodeError() {
   return new Error(
-    'This browser could not decode animated WebP frames locally. Try a modern Chromium or Safari build.',
+    "This browser could not decode animated WebP frames locally. Try a modern Chromium or Safari build.",
   );
 }
 
 function canvasFromVideoFrame(frame: VideoFrame) {
-  if (typeof OffscreenCanvas !== 'undefined') {
+  if (typeof OffscreenCanvas !== "undefined") {
     return new OffscreenCanvas(frame.displayWidth, frame.displayHeight);
   }
 
@@ -185,34 +215,60 @@ function canvasFromVideoFrame(frame: VideoFrame) {
 function isCanvas2DContext(
   context: OffscreenCanvasRenderingContext2D | RenderingContext | null,
 ): context is CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D {
-  return !!context && 'clearRect' in context && 'drawImage' in context && 'getImageData' in context;
+  return (
+    !!context &&
+    "clearRect" in context &&
+    "drawImage" in context &&
+    "getImageData" in context
+  );
 }
 
-async function canvasLikeToPngBlob(canvas: HTMLCanvasElement | OffscreenCanvas) {
-  if ('convertToBlob' in canvas) {
-    return await canvas.convertToBlob({ type: 'image/png' });
+async function canvasLikeToPngBlob(
+  canvas: HTMLCanvasElement | OffscreenCanvas,
+) {
+  if ("convertToBlob" in canvas) {
+    return await canvas.convertToBlob({ type: "image/png" });
   }
 
-  return await canvasToBlob(canvas, 'image/png');
+  return await canvasToBlob(canvas, "image/png");
 }
 
-function isWebpRiff(bytes: Uint8Array) {
+/**
+ * `canvas.toBlob` is allowed to ignore the type you asked for and return a PNG. It does not fail,
+ * it does not warn, and the Blob it hands back is honestly typed image/png, so the lie only
+ * begins if nobody reads that. WebKit takes this route for WebP today. Read it.
+ */
+async function canvasToWebpBlob(canvas: HTMLCanvasElement, quality: number) {
+  const blob = await canvasToBlob(canvas, "image/webp", quality);
+
+  if (blob.type !== "image/webp") {
+    throw new Error(
+      `This browser could not encode WebP locally, and returned ${blob.type || "an unknown format"} instead. Try a Chromium or Firefox build.`,
+    );
+  }
+
+  return blob;
+}
+
+export function isWebpRiff(bytes: Uint8Array) {
   if (bytes.length < 12) {
     return false;
   }
 
   return (
-    String.fromCharCode(bytes[0], bytes[1], bytes[2], bytes[3]) === 'RIFF' &&
-    String.fromCharCode(bytes[8], bytes[9], bytes[10], bytes[11]) === 'WEBP'
+    String.fromCharCode(bytes[0], bytes[1], bytes[2], bytes[3]) === "RIFF" &&
+    String.fromCharCode(bytes[8], bytes[9], bytes[10], bytes[11]) === "WEBP"
   );
 }
 
 export function isWebpFile(file: File) {
-  return file.type === 'image/webp' || file.name.toLowerCase().endsWith('.webp');
+  return (
+    file.type === "image/webp" || file.name.toLowerCase().endsWith(".webp")
+  );
 }
 
 export function canDecodeAnimatedWebpInBrowser() {
-  return typeof window !== 'undefined' && typeof ImageDecoder !== 'undefined';
+  return typeof window !== "undefined" && typeof ImageDecoder !== "undefined";
 }
 
 export function readWebpMetadataFromBytes(
@@ -220,7 +276,7 @@ export function readWebpMetadataFromBytes(
   fallbackSize?: { width: number; height: number },
 ): WebpMetadata {
   if (!isWebpRiff(bytes)) {
-    throw new Error('Choose one WebP file for this tool.');
+    throw new Error("Choose one WebP file for this tool.");
   }
 
   let width = fallbackSize?.width ?? 0;
@@ -250,17 +306,17 @@ export function readWebpMetadataFromBytes(
 
     const chunkData = bytes.slice(dataStart, dataEnd);
 
-    if (chunkType === 'VP8X' && chunkData.length >= 10) {
+    if (chunkType === "VP8X" && chunkData.length >= 10) {
       const flags = chunkData[0];
       animated ||= (flags & 0x02) !== 0;
       hasAlpha ||= (flags & 0x10) !== 0;
       width ||= readUint24LE(chunkData, 4) + 1;
       height ||= readUint24LE(chunkData, 7) + 1;
-    } else if (chunkType === 'ANIM' && chunkData.length >= 6) {
+    } else if (chunkType === "ANIM" && chunkData.length >= 6) {
       animated = true;
       loopCount = readUint16LE(chunkData, 4);
       frameCount = 0;
-    } else if (chunkType === 'ANMF' && chunkData.length >= 16) {
+    } else if (chunkType === "ANMF" && chunkData.length >= 16) {
       animated = true;
       frameCount += 1;
       const frameDuration = Math.max(20, readUint24LE(chunkData, 12));
@@ -271,9 +327,9 @@ export function readWebpMetadataFromBytes(
       width = Math.max(width, frameWidth);
       height = Math.max(height, frameHeight);
       hasAlpha ||= (chunkData[15] & 0x02) === 0;
-    } else if (chunkType === 'ALPH') {
+    } else if (chunkType === "ALPH") {
       hasAlpha = true;
-    } else if (chunkType === 'VP8L') {
+    } else if (chunkType === "VP8L") {
       hasAlpha = true;
     }
 
@@ -294,7 +350,7 @@ export function readWebpMetadataFromBytes(
 
 export async function readWebpSource(file: File): Promise<DecodedWebpSource> {
   if (!isWebpFile(file)) {
-    throw new Error('Choose one WebP file for this tool.');
+    throw new Error("Choose one WebP file for this tool.");
   }
 
   const [bytes, loadedImage] = await Promise.all([
@@ -325,11 +381,11 @@ export async function decodeAnimatedWebpFrames(
 
   if (!source.metadata.animated) {
     throw new Error(
-      'This WebP is static. Use WebP Quality Recompressor or WebP Optimizer instead.',
+      "This WebP is static. Use WebP Quality Recompressor or WebP Optimizer instead.",
     );
   }
 
-  const decoder = new ImageDecoder({ data: source.bytes, type: 'image/webp' });
+  const decoder = new ImageDecoder({ data: source.bytes, type: "image/webp" });
   const frames: DecodedWebpFrame[] = [];
 
   try {
@@ -337,14 +393,19 @@ export async function decodeAnimatedWebpFrames(
       const result = await decoder.decode({ frameIndex: index });
       const videoFrame = result.image;
       const canvas = canvasFromVideoFrame(videoFrame);
-      const context = canvas.getContext('2d');
+      const context = canvas.getContext("2d");
 
       if (!isCanvas2DContext(context)) {
         videoFrame.close();
         throw createAnimatedDecodeError();
       }
 
-      context.clearRect(0, 0, videoFrame.displayWidth, videoFrame.displayHeight);
+      context.clearRect(
+        0,
+        0,
+        videoFrame.displayWidth,
+        videoFrame.displayHeight,
+      );
       context.drawImage(videoFrame, 0, 0);
 
       const imageData = context.getImageData(
@@ -358,7 +419,7 @@ export async function decodeAnimatedWebpFrames(
 
       frames.push({
         index: index + 1,
-        name: `frame-${String(index + 1).padStart(4, '0')}.png`,
+        name: `frame-${String(index + 1).padStart(4, "0")}.png`,
         blob,
         rgba: new Uint8Array(imageData.data),
         width: imageData.width,
@@ -382,18 +443,23 @@ export async function encodeAnimatedWebp(params: {
   progressHandler?: ProgressHandler;
 }) {
   const runtime = await getBrowserFfmpegRuntime();
-  const manifestName = 'frames.txt';
-  const outputName = 'output.webp';
+  const manifestName = "frames.txt";
+  const outputName = "output.webp";
   const cleanupTargets = [manifestName, outputName];
   const inputNames: string[] = [];
 
   try {
     for (let index = 0; index < params.frames.length; index += 1) {
-      const frameName = `frame-${String(index + 1).padStart(4, '0')}.png`;
+      const frameName = `frame-${String(index + 1).padStart(4, "0")}.png`;
       inputNames.push(frameName);
       cleanupTargets.push(frameName);
-      await runtime.ffmpeg.writeFile(frameName, await runtime.fetchFile(params.frames[index].blob));
-      params.progressHandler?.((index + 1) / Math.max(params.frames.length * 2, 1));
+      await runtime.ffmpeg.writeFile(
+        frameName,
+        await runtime.fetchFile(params.frames[index].blob),
+      );
+      params.progressHandler?.(
+        (index + 1) / Math.max(params.frames.length * 2, 1),
+      );
     }
 
     const manifest = buildConcatManifest(
@@ -403,30 +469,30 @@ export async function encodeAnimatedWebp(params: {
     await runtime.ffmpeg.writeFile(manifestName, manifest);
 
     const exitCode = await runtime.ffmpeg.exec([
-      '-f',
-      'concat',
-      '-safe',
-      '0',
-      '-i',
+      "-f",
+      "concat",
+      "-safe",
+      "0",
+      "-i",
       manifestName,
-      '-an',
-      '-c:v',
-      'libwebp_anim',
-      '-quality',
+      "-an",
+      "-c:v",
+      "libwebp_anim",
+      "-quality",
       String(clamp(Math.round(params.quality), 1, 100)),
-      '-compression_level',
-      String(getCompressionLevel('balanced', params.method ?? 4)),
-      '-loop',
+      "-compression_level",
+      String(getCompressionLevel("balanced", params.method ?? 4)),
+      "-loop",
       String(Math.max(0, Math.round(params.loopCount))),
       outputName,
     ]);
 
     if (exitCode !== 0) {
-      throw new Error('The animated WebP could not be encoded locally.');
+      throw new Error("The animated WebP could not be encoded locally.");
     }
 
     params.progressHandler?.(1);
-    return await readBlobFromFile(runtime.ffmpeg, outputName, 'image/webp');
+    return await readBlobFromFile(runtime.ffmpeg, outputName, "image/webp");
   } finally {
     await cleanupFiles(runtime.ffmpeg, cleanupTargets);
   }
@@ -440,8 +506,8 @@ async function encodePngSequenceToMp4(params: {
   background: string;
 }) {
   const runtime = await getBrowserFfmpegRuntime();
-  const manifestName = 'frames.txt';
-  const outputName = 'output.mp4';
+  const manifestName = "frames.txt";
+  const outputName = "output.mp4";
   const cleanupTargets = [manifestName, outputName];
   const inputNames: string[] = [];
   const evenWidth = Math.max(2, Math.round(params.width / 2) * 2);
@@ -449,10 +515,13 @@ async function encodePngSequenceToMp4(params: {
 
   try {
     for (let index = 0; index < params.frames.length; index += 1) {
-      const frameName = `frame-${String(index + 1).padStart(4, '0')}.png`;
+      const frameName = `frame-${String(index + 1).padStart(4, "0")}.png`;
       inputNames.push(frameName);
       cleanupTargets.push(frameName);
-      await runtime.ffmpeg.writeFile(frameName, await runtime.fetchFile(params.frames[index].blob));
+      await runtime.ffmpeg.writeFile(
+        frameName,
+        await runtime.fetchFile(params.frames[index].blob),
+      );
     }
 
     await runtime.ffmpeg.writeFile(
@@ -464,43 +533,45 @@ async function encodePngSequenceToMp4(params: {
     );
 
     const filterGraph = `${
-      params.fps ? `fps=${clamp(params.fps, 1, 60)},` : ''
+      params.fps ? `fps=${clamp(params.fps, 1, 60)},` : ""
     }scale=${evenWidth}:${evenHeight}:flags=lanczos:force_original_aspect_ratio=decrease,pad=${evenWidth}:${evenHeight}:(ow-iw)/2:(oh-ih)/2:${sanitizeHexColor(params.background)},format=yuv420p`;
     const exitCode = await runtime.ffmpeg.exec([
-      '-f',
-      'concat',
-      '-safe',
-      '0',
-      '-i',
+      "-f",
+      "concat",
+      "-safe",
+      "0",
+      "-i",
       manifestName,
-      '-vf',
+      "-vf",
       filterGraph,
-      '-movflags',
-      '+faststart',
-      '-an',
-      '-preset',
-      'veryfast',
-      '-crf',
-      '23',
+      "-movflags",
+      "+faststart",
+      "-an",
+      "-preset",
+      "veryfast",
+      "-crf",
+      "23",
       outputName,
     ]);
 
     if (exitCode !== 0) {
-      throw new Error('The MP4 could not be generated from these WebP frames locally.');
+      throw new Error(
+        "The MP4 could not be generated from these WebP frames locally.",
+      );
     }
 
-    return await readBlobFromFile(runtime.ffmpeg, outputName, 'video/mp4');
+    return await readBlobFromFile(runtime.ffmpeg, outputName, "video/mp4");
   } finally {
     await cleanupFiles(runtime.ffmpeg, cleanupTargets);
   }
 }
 
-function getAnimatedWebpQualityPreset(preset: 'high' | 'balanced' | 'smaller') {
-  if (preset === 'smaller') {
+function getAnimatedWebpQualityPreset(preset: "high" | "balanced" | "smaller") {
+  if (preset === "smaller") {
     return { quality: 62, method: 6 };
   }
 
-  if (preset === 'high') {
+  if (preset === "high") {
     return { quality: 88, method: 4 };
   }
 
@@ -514,45 +585,53 @@ export async function convertVideoToWebp(params: {
   width: number;
   fps: number;
   loopCount: number;
-  qualityPreset: 'high' | 'balanced' | 'smaller';
+  qualityPreset: "high" | "balanced" | "smaller";
 }) {
   const runtime = await getBrowserFfmpegRuntime();
-  const inputName = `input.${params.file.name.split('.').pop()?.toLowerCase() || 'mp4'}`;
-  const outputName = 'output.webp';
+  const inputName = `input.${params.file.name.split(".").pop()?.toLowerCase() || "mp4"}`;
+  const outputName = "output.webp";
   const cleanupTargets = [inputName, outputName];
   const startSeconds = Math.max(0, params.startMs / 1000);
-  const durationSeconds = Math.max(0.05, (params.endMs - params.startMs) / 1000);
+  const durationSeconds = Math.max(
+    0.05,
+    (params.endMs - params.startMs) / 1000,
+  );
   const targetWidth = Math.max(2, Math.round(params.width / 2) * 2);
   const quality = getAnimatedWebpQualityPreset(params.qualityPreset);
 
   try {
-    await runtime.ffmpeg.writeFile(inputName, await runtime.fetchFile(params.file));
-    const exitCode = await runtime.ffmpeg.exec([
-      '-ss',
-      startSeconds.toFixed(3),
-      '-t',
-      durationSeconds.toFixed(3),
-      '-i',
+    await runtime.ffmpeg.writeFile(
       inputName,
-      '-an',
-      '-vf',
+      await runtime.fetchFile(params.file),
+    );
+    const exitCode = await runtime.ffmpeg.exec([
+      "-ss",
+      startSeconds.toFixed(3),
+      "-t",
+      durationSeconds.toFixed(3),
+      "-i",
+      inputName,
+      "-an",
+      "-vf",
       `fps=${clamp(params.fps, 1, 60)},scale=${targetWidth}:-1:flags=lanczos`,
-      '-c:v',
-      'libwebp_anim',
-      '-quality',
+      "-c:v",
+      "libwebp_anim",
+      "-quality",
       String(quality.quality),
-      '-compression_level',
+      "-compression_level",
       String(quality.method),
-      '-loop',
+      "-loop",
       String(Math.max(0, params.loopCount)),
       outputName,
     ]);
 
     if (exitCode !== 0) {
-      throw new Error('The video clip could not be converted to animated WebP locally.');
+      throw new Error(
+        "The video clip could not be converted to animated WebP locally.",
+      );
     }
 
-    return await readBlobFromFile(runtime.ffmpeg, outputName, 'image/webp');
+    return await readBlobFromFile(runtime.ffmpeg, outputName, "image/webp");
   } finally {
     await cleanupFiles(runtime.ffmpeg, cleanupTargets);
   }
@@ -581,11 +660,14 @@ export async function optimizeWebp(params: {
 
     if (posterizeLevel > 1) {
       for (let index = 0; index < imageData.data.length; index += 4) {
-        imageData.data[index] = Math.round(imageData.data[index] / posterizeLevel) * posterizeLevel;
+        imageData.data[index] =
+          Math.round(imageData.data[index] / posterizeLevel) * posterizeLevel;
         imageData.data[index + 1] =
-          Math.round(imageData.data[index + 1] / posterizeLevel) * posterizeLevel;
+          Math.round(imageData.data[index + 1] / posterizeLevel) *
+          posterizeLevel;
         imageData.data[index + 2] =
-          Math.round(imageData.data[index + 2] / posterizeLevel) * posterizeLevel;
+          Math.round(imageData.data[index + 2] / posterizeLevel) *
+          posterizeLevel;
       }
     }
 
@@ -607,7 +689,11 @@ export async function optimizeWebp(params: {
 
   const pngFrames = await Promise.all(
     rgbaFrames.map(async (rgba, index) => ({
-      blob: await rgbaToPngBlob(rgba, decodedFrames[0].width, decodedFrames[0].height),
+      blob: await rgbaToPngBlob(
+        rgba,
+        decodedFrames[0].width,
+        decodedFrames[0].height,
+      ),
       delayMs: delays[index] ?? 100,
     })),
   );
@@ -625,12 +711,14 @@ export async function convertWebpToGif(params: {
   width: number;
   fpsCap: number | null;
   loopCount: number | null;
-  qualityPreset: 'high' | 'balanced' | 'smaller';
+  qualityPreset: "high" | "balanced" | "smaller";
 }) {
   const source = await readWebpSource(params.file);
 
   if (!source.metadata.animated) {
-    throw new Error('This WebP is static. Use Image Converter if you only need a still GIF.');
+    throw new Error(
+      "This WebP is static. Use Image Converter if you only need a still GIF.",
+    );
   }
 
   const frames = await decodeAnimatedWebpFrames(params.file);
@@ -642,7 +730,7 @@ export async function convertWebpToGif(params: {
       const height = Math.max(2, Math.round(maxWidth * aspect));
       const { canvas } = drawImageToCanvas(element, maxWidth, height, null);
       return {
-        blob: await canvasToBlob(canvas, 'image/png'),
+        blob: await canvasToBlob(canvas, "image/png"),
         delayMs: frame.delayMs,
       };
     }),
@@ -659,9 +747,14 @@ export async function convertWebpToGif(params: {
             blob: await rgbaToPngBlob(
               rgba,
               Math.max(2, Math.round(maxWidth)),
-              Math.max(2, Math.round(maxWidth * (frames[0].height / Math.max(1, frames[0].width)))),
+              Math.max(
+                2,
+                Math.round(
+                  maxWidth * (frames[0].height / Math.max(1, frames[0].width)),
+                ),
+              ),
             ),
-            name: `frame-${String(index + 1).padStart(4, '0')}.png`,
+            name: `frame-${String(index + 1).padStart(4, "0")}.png`,
             delayMs:
               capAnimationFrameRate(
                 frames.map((frame) => frame.rgba),
@@ -672,7 +765,7 @@ export async function convertWebpToGif(params: {
         )
       : resizedFrames.map((frame, index) => ({
           ...frame,
-          name: `frame-${String(index + 1).padStart(4, '0')}.png`,
+          name: `frame-${String(index + 1).padStart(4, "0")}.png`,
         }));
 
   return await encodePngSequenceToGif({
@@ -691,7 +784,9 @@ export async function convertWebpToMp4(params: {
   const source = await readWebpSource(params.file);
 
   if (!source.metadata.animated) {
-    throw new Error('This WebP is static. Use Image Converter or WebP Optimizer instead.');
+    throw new Error(
+      "This WebP is static. Use Image Converter or WebP Optimizer instead.",
+    );
   }
 
   const frames = await decodeAnimatedWebpFrames(params.file);
@@ -702,15 +797,15 @@ export async function convertWebpToMp4(params: {
       const aspect = frame.height / Math.max(1, frame.width);
       const height = Math.max(2, Math.round(maxWidth * aspect));
       const canvas = flattenPngTransparency(image, maxWidth, height, {
-        mode: 'custom-solid',
+        mode: "custom-solid",
         customColor: params.background,
         gradientStart: params.background,
         gradientEnd: params.background,
-        direction: 'to-bottom',
+        direction: "to-bottom",
       });
 
       return {
-        blob: await canvasToBlob(canvas, 'image/png'),
+        blob: await canvasToBlob(canvas, "image/png"),
         delayMs: frame.delayMs,
       };
     }),
@@ -732,13 +827,23 @@ export async function convertWebpToMp4(params: {
 
 export async function renderStillWebpImageData(file: File) {
   const loaded = await loadRasterImage(file);
-  const { context, canvas } = drawImageToCanvas(loaded.element, loaded.width, loaded.height, null);
+  const { context, canvas } = drawImageToCanvas(
+    loaded.element,
+    loaded.width,
+    loaded.height,
+    null,
+  );
   return context.getImageData(0, 0, canvas.width, canvas.height);
 }
 
 export async function renderFrameToImageData(frame: DecodedWebpFrame) {
   const element = await loadImageElementFromBlob(frame.blob);
-  const { context, canvas } = drawImageToCanvas(element, frame.width, frame.height, null);
+  const { context, canvas } = drawImageToCanvas(
+    element,
+    frame.width,
+    frame.height,
+    null,
+  );
   return context.getImageData(0, 0, canvas.width, canvas.height);
 }
 
@@ -764,7 +869,9 @@ export async function extractWebpPalette(
 ): Promise<PngPaletteEntry[]> {
   const source = await readWebpSource(file);
   const imageData = source.metadata.animated
-    ? await renderFrameToImageData((await decodeAnimatedWebpFrames(file))[frameIndex]!)
+    ? await renderFrameToImageData(
+        (await decodeAnimatedWebpFrames(file))[frameIndex]!,
+      )
     : await renderStillWebpImageData(file);
   return extractPaletteEntriesFromRgba(imageData.data, limit);
 }
@@ -792,7 +899,7 @@ export async function flattenWebpSource(params: {
         direction: params.direction,
       },
     );
-    return await canvasToBlob(canvas, 'image/webp', 0.92);
+    return await canvasToWebpBlob(canvas, 0.92);
   }
 
   const frames = await decodeAnimatedWebpFrames(params.file);
@@ -807,7 +914,7 @@ export async function flattenWebpSource(params: {
         direction: params.direction,
       });
       return {
-        blob: await canvasToBlob(canvas, 'image/png'),
+        blob: await canvasToBlob(canvas, "image/png"),
         delayMs: frame.delayMs,
       };
     }),
@@ -825,19 +932,21 @@ export async function recompressStillWebp(params: {
   file: File;
   quality: number;
   lossless: boolean;
-  methodPreset: 'balanced' | 'max-quality' | 'smaller';
+  methodPreset: "balanced" | "max-quality" | "smaller";
 }) {
   const source = await readWebpSource(params.file);
 
   if (source.metadata.animated) {
-    throw new Error('This WebP is animated. Use WebP Optimizer for animated WebP files.');
+    throw new Error(
+      "This WebP is animated. Use WebP Optimizer for animated WebP files.",
+    );
   }
 
   const imageData = await renderStillWebpImageData(params.file);
   const adjustedQuality =
-    params.methodPreset === 'smaller'
+    params.methodPreset === "smaller"
       ? clamp(params.quality - 8, 1, 100)
-      : params.methodPreset === 'balanced'
+      : params.methodPreset === "balanced"
         ? clamp(params.quality - 3, 1, 100)
         : clamp(params.quality, 1, 100);
 
@@ -847,7 +956,9 @@ export async function recompressStillWebp(params: {
   });
 }
 
-export function summarizeWebpTransparency(rgba: Uint8ClampedArray | Uint8Array) {
+export function summarizeWebpTransparency(
+  rgba: Uint8ClampedArray | Uint8Array,
+) {
   return analyzeTransparency(rgba);
 }
 
@@ -858,4 +969,8 @@ export {
   getAnimationDuration,
   getBaseName,
 };
-export { paletteEntriesToCssVariables, paletteEntriesToJson, renderPngChannelView };
+export {
+  paletteEntriesToCssVariables,
+  paletteEntriesToJson,
+  renderPngChannelView,
+};
