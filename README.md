@@ -229,7 +229,7 @@ The full matrix, one row per format, with the exact decode and encode mechanism 
 | PNG | yes | yes | Canvas (`canvasToPngBlob`, `png.rgbaToPngBlob`) |
 | APNG | yes | yes | UPNG, pure JS (`png.decodeAnimatedPng`, `png.encodeAnimatedPng`) |
 | JPEG | yes | yes | Canvas (`canvasToBlob`), or MozJPEG WebAssembly with progressive and chroma-subsampling control (`jpg.encodeJpegBlobFromImageData`) |
-| HEIC / HEIF | yes | no | `jpg.decodeJpegLikeSource`, through the browser `ImageDecoder`. Re-encode to JPEG, WebP or PNG |
+| HEIC / HEIF | browser-dependent | no | `jpg.decodeJpegLikeSource`, through the browser `ImageDecoder`. There is no pure-JS fallback, so it throws where the runtime cannot decode HEIC. Re-encode to JPEG, WebP or PNG |
 | WebP (still) | yes | yes | Canvas, plus `webp.recompressStillWebp` and `webp.optimizeWebp` (OffscreenCanvas encoder, with a pure-JS VP8L lossless fallback) |
 | WebP (animated) | yes | yes | Decode with WebCodecs `ImageDecoder`, encode with ffmpeg.wasm `libwebp_anim` |
 | AVIF | yes | yes | Browser codec: `ImageDecoder` decodes, `OffscreenCanvas.convertToBlob` encodes. See [docs/avif-encoding-in-the-browser.md](docs/avif-encoding-in-the-browser.md) |
