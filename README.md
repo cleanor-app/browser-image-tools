@@ -222,6 +222,8 @@ Types: `GifMetadata`, `ExtractedGifFrame`, `ExtractedVideoPngFrame`, `GifSegment
 
 ## Supported formats
 
+The full matrix, one row per format, with the exact decode and encode mechanism and the feature-detection call for the browser-dependent ones: [data/format-support.csv](data/format-support.csv). Summary:
+
 | Format | Decode | Encode | How |
 | --- | --- | --- | --- |
 | PNG | yes | yes | Canvas (`canvasToPngBlob`, `png.rgbaToPngBlob`) |
